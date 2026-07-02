@@ -2,8 +2,11 @@ package GuitarTuner;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Scanner;
 
 public class Main {
+
+    private static volatile boolean running = true;
 
     public static String getNote(double freq) {
         double epsilon = 7.0; // Allow a ±7 Hz tolerance
@@ -29,15 +32,27 @@ public class Main {
     }
 
     public static void main(String[] args) {
-        AudioRecorder recorder = new AudioRecorder();
-        byte[] audio = recorder.recordAudio(2);
+        Scanner scanner = new Scanner(System.in);
 
-        SampleConverter converter = new SampleConverter();
-        double[] samples = converter.convert(audio);
+        new Thread(() -> {
+            System.out.println("Press ENTER to stop...");
+            scanner.nextLine();
+            running = false;
+        }).start();
 
-        PitchDetector detector = new PitchDetector(44100);
-        double frequency = detector.detectPitch(samples);
+        while (running == true){
+            AudioRecorder recorder = new AudioRecorder();
+            byte[] audio = recorder.recordAudio(2);
 
-        System.out.println("Detected frequency: " + getNote(frequency) + " Hz");
+            SampleConverter converter = new SampleConverter();
+            double[] samples = converter.convert(audio);
+
+            PitchDetector detector = new PitchDetector(44100);
+            double frequency = detector.detectPitch(samples);
+
+            System.out.println("Detected frequency: " + getNote(frequency) + " Hz");
+        }
+
+        System.out.println("Tuner stopped!");
     }   
 }
